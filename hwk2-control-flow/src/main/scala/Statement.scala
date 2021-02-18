@@ -5,24 +5,31 @@ sealed abstract class Statement extends AbstractSyntaxTree {
     this.setid
     this match {
       case Script(stmts) => {
-        addHeights(stmts); stmts.foreach(s => s.prep)
+        addHeights(stmts);
+        stmts.foreach(s => s.prep)
       }
       case BlockStmt(stmts) => {
-        addHeights(stmts); stmts.foreach(s => s.prep)
+        addHeights(stmts);
+        stmts.foreach(s => s.prep)
       }
       case VarDeclListStmt(decls) => {
-        addHeights(decls); decls.foreach(s => s.prep)
+        addHeights(decls);
+        decls.foreach(s => s.prep)
       }
       case FunctionDecl(_, fun) => {
-        fun.height = height; addHeight(fun.asInstanceOf[FunctionExpr].body)
+        fun.height = height;
+        addHeight(fun.asInstanceOf[FunctionExpr].body)
       }
       case IfStmt(_, thenPart, elsePart) => {
-        addHeights(List(thenPart, elsePart)); thenPart.prep; elsePart.prep
+        addHeights(List(thenPart, elsePart));
+        thenPart.prep;
+        elsePart.prep
       }
       case SwitchStmt(_, cases, defaultCase) => {
         val d = cases ++ (defaultCase match {
           case Some(c) => {
-            c.default = true; List(c)
+            c.default = true;
+            List(c)
           }
           case None => List()
         })
@@ -30,22 +37,28 @@ sealed abstract class Statement extends AbstractSyntaxTree {
         d.foreach(c => c.prep)
       }
       case CaseStmt(_, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case DoWhileStmt(_, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case WhileStmt(_, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case ForStmt(_, _, _, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case ForInStmt(_, _, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case LabeledStmt(_, body) => {
-        addHeight(body); body.prep
+        addHeight(body);
+        body.prep
       }
       case _ =>
     }
@@ -146,47 +159,37 @@ sealed abstract class Statement extends AbstractSyntaxTree {
   }
 
   var successors = List[Statement]()
-  var predecessor = List[Statement]()
 
   def appendSuccessor(s: Statement) = {
     successors = s :: successors
-    s.predecessor = this :: s.predecessor
   }
 
-  def visit(stmts: List[Statement]): Unit = {
+  protected def visit(stmts: List[Statement]): Unit = {
     stmts match {
-      case Nil => ()
-      case List(s) => s.buildGraph
-      case s1 :: s2 :: r => {
-        s1.buildGraph
-        visit(s2 :: r)
-        val ex = s1.exit
-        val et = s2.entry
-        for (e <- ex) {
-          e.appendSuccessor(et)
-        }
+      case x :: y :: xs => {
+        x.buildGraph
+        visit(y :: xs)
+        x.exit foreach (e => e.appendSuccessor(y.entry))
       }
+      case x :: Nil => x.buildGraph
+      case Nil => ()
     }
   }
 
   def buildGraph: Unit = this match {
     case Script(stmts) => visit(stmts)
     case BlockStmt(stmts) => visit(stmts)
-    case VarDeclStmt(name, expr) =>
+    case VarDeclStmt(name, expr) => ()
     case VarDeclListStmt(decls) => visit(decls)
     case DoWhileStmt(cond, body) => {
       body.buildGraph
       appendSuccessor(body.entry)
-      for (item <- body.exit) {
-        item.appendSuccessor(this)
-      }
+      body.exit.foreach(e => e.appendSuccessor(this))
     }
     case WhileStmt(cond, body) => {
       body.buildGraph
       appendSuccessor(body.entry)
-      for (item <- body.exit) {
-        item.appendSuccessor(this)
-      }
+      body.exit foreach (e => e.appendSuccessor(this))
     }
     case SwitchStmt(cond, cases, defaultCase) => {
       val aggregatedCases = defaultCase match {
@@ -194,9 +197,7 @@ sealed abstract class Statement extends AbstractSyntaxTree {
         case None => cases
       }
       visit(aggregatedCases)
-      for (item <- aggregatedCases) {
-        appendSuccessor(item.entry)
-      }
+      aggregatedCases foreach (c => appendSuccessor(c.entry))
     }
     case IfStmt(cond, thenPart, elsePart) => {
       thenPart.buildGraph
@@ -209,65 +210,92 @@ sealed abstract class Statement extends AbstractSyntaxTree {
         }
       }
     }
-    case ExprStmt(expr) =>
-    case _ => {
-      println(this.getClass)
-    }
+    case ExprStmt(expr) => ()
+    case _ => ()
   }
 
-  def dotStr(): String = "\"" + (this match {
-    case Script(stmts) => stmts.head.dotStr
-    case BlockStmt(stmts) => stmts.head.dotStr
-    case VarDeclListStmt(decls) => decls.head.dotStr
-    case IfStmt(cond, thenPart, elsePart) => cond.toString
-    case WhileStmt(cond, body) => cond.toString
-    case DoWhileStmt(cond, body) => cond.toString
-    case FunctionDecl(name, fun) => "function " + name
-    case EmptyStmt() => "<EmptyStmt>"
-    case _ => this.toString.trim
-  }).replaceAll(" ", " ") + "\""
+  def dotStr(): String = s"\"${
+    (this match {
+      case Script(stmts) => stmts.head.dotStr
+      case BlockStmt(stmts) => stmts.head.dotStr
+      case VarDeclListStmt(decls) => decls.head.dotStr
+      case IfStmt(cond, thenPart, elsePart) => cond.toString
+      case WhileStmt(cond, body) => cond.toString
+      case DoWhileStmt(cond, body) => cond.toString
+      case FunctionDecl(name, fun) => "function " + name
+      case EmptyStmt() => "<EmptyStmt>"
+      case _ => this.toString.trim
+    }).replaceAll(" ", " ")
+  }\""
 
-  def toDot: List[String] = this match {
-    case Script(stmts) => stmts.flatMap(s => s.toDot ++ s.successors.map(e => s.dotStr + " -> " + e.dotStr))
-    case BlockStmt(stmts) => stmts.flatMap(s => s.toDot ++ s.successors.map(e => s.dotStr + " -> " + e.dotStr))
-    case VarDeclListStmt(stmts) => stmts.flatMap(s => s.toDot ++ s.successors.map(e => s.dotStr + " -> " + e.dotStr))
-    case IfStmt(cond, thenPart, elsePart) => thenPart.toDot ++ elsePart.toDot
-    case WhileStmt(cond, body) => List(toSubGraph(body.toDot, this.id))
-    case DoWhileStmt(cond, body) => List(toSubGraph(body.toDot, this.id))
-    case _ => Nil
+  def edge(s: String, d: String) = s + " -> " + s
+
+  def toDot(indentCount: Int): List[String] = this match {
+    case Script(stmts) => stmts.flatMap(predecessor => {
+      predecessor.toDot(indentCount) ++ predecessor.successors.map(successor => edge(predecessor.dotStr, successor.dotStr))
+    })
+    case BlockStmt(stmts) => stmts.flatMap(s => s.toDot(indentCount + 1) ++ s.successors.map(e => edge(s.dotStr, e.dotStr)))
+    case VarDeclListStmt(stmts) => stmts.flatMap(s => s.toDot(indentCount) ++ s.successors.map(e => edge(s.dotStr, e.dotStr)))
+    case IfStmt(cond, thenPart, elsePart) => thenPart.toDot(indentCount) ++ elsePart.toDot(indentCount)
+    case WhileStmt(cond, body) => List(toSubGraph(body.toDot(indentCount), this.id, indentCount))
+    case DoWhileStmt(cond, body) => List(toSubGraph(body.toDot(indentCount), this.id, indentCount))
+    case _ => List()
   }
 
   def toDotGraph =
     s"""digraph cs738_${this.getClass.getSimpleName} {
-       |${toDot.zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(1)} ${x._1}")}
+       |${toDot(0).zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(0)}${x._1}")}
        |}""".stripMargin
 
   def indent(count: Int) = (0 to count).foldLeft("")((acc, _) => acc + "  ")
 
-  def toSubGraph(edges: List[String], id: Long) =
+  def toSubGraph(edges: List[String], id: Long, indentCount: Int) = {
     s"""subgraph cluster_$id {
-       |${edges.zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(2)} ${x._1}")}
-       |${indent(1)} }""".stripMargin
+       |${edges.zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(indentCount + 1)}${x._1}")}
+       |${indent(indentCount)}}""".stripMargin
+  }
 }
 
-case class Script(stmts : List[Statement]) extends  Statement
-case class BlockStmt(stmts : List[Statement]) extends Statement
-case class VarDeclListStmt(decls : List[Statement]) extends Statement
+case class Script(stmts: List[Statement]) extends Statement
+
+case class BlockStmt(stmts: List[Statement]) extends Statement
+
+case class VarDeclListStmt(decls: List[Statement]) extends Statement
+
 case class EmptyStmt() extends Statement
-case class ExprStmt(expr : Expression) extends Statement()
-case class VarDeclStmt(name : IntroduceVar, expr : Expression) extends Statement
-case class FunctionDecl(name : IntroduceVar, fun : Expression) extends Statement
-case class ReturnStmt(expr : Expression) extends Statement
-case class IfStmt(cond : Expression, thenPart : Statement, elsePart : Statement) extends Statement
-case class SwitchStmt(cond : Expression, cases : List[CaseStmt], defaultCase : Option[CaseStmt]) extends Statement
-case class CaseStmt(expr : Expression, body : Statement) extends Statement { var default = false }
-case class BreakStmt(breakLabel : String) extends Statement
-case class ContinueStmt(continueLabel : String) extends Statement
-case class DoWhileStmt(cond : Expression, body : Statement) extends Statement
-case class WhileStmt(cond : Expression, body : Statement) extends Statement
-case class ForStmt(init : ForInit, cond : Option[Expression], increment : Option[Expression], body : Statement) extends Statement
-case class ForInStmt(init : ForInInit, expr : Expression, body : Statement) extends Statement
-case class LabeledStmt(label : List[String], stmt : Statement) extends Statement
-case class TryStmt(body : Statement, catchClause : List[CatchStmt], finalCatch : Option[Statement]) extends Statement
-case class CatchStmt(name : IntroduceVar, body : Statement) extends Statement
-case class ThrowStmt(expr : Expression) extends Statement
+
+case class ExprStmt(expr: Expression) extends Statement()
+
+case class VarDeclStmt(name: IntroduceVar, expr: Expression) extends Statement
+
+case class FunctionDecl(name: IntroduceVar, fun: Expression) extends Statement
+
+case class ReturnStmt(expr: Expression) extends Statement
+
+case class IfStmt(cond: Expression, thenPart: Statement, elsePart: Statement) extends Statement
+
+case class SwitchStmt(cond: Expression, cases: List[CaseStmt], defaultCase: Option[CaseStmt]) extends Statement
+
+case class CaseStmt(expr: Expression, body: Statement) extends Statement {
+  var default = false
+}
+
+case class BreakStmt(breakLabel: String) extends Statement
+
+case class ContinueStmt(continueLabel: String) extends Statement
+
+case class DoWhileStmt(cond: Expression, body: Statement) extends Statement
+
+case class WhileStmt(cond: Expression, body: Statement) extends Statement
+
+case class ForStmt(init: ForInit, cond: Option[Expression], increment: Option[Expression], body: Statement) extends Statement
+
+case class ForInStmt(init: ForInInit, expr: Expression, body: Statement) extends Statement
+
+case class LabeledStmt(label: List[String], stmt: Statement) extends Statement
+
+case class TryStmt(body: Statement, catchClause: List[CatchStmt], finalCatch: Option[Statement]) extends Statement
+
+case class CatchStmt(name: IntroduceVar, body: Statement) extends Statement
+
+case class ThrowStmt(expr: Expression) extends Statement
