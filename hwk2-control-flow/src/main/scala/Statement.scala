@@ -227,7 +227,7 @@ sealed abstract class Statement extends AbstractSyntaxTree {
     case _ => this.toString.trim
   }).replaceAll(" ", " "))
 
-  def edge(s: String, d: String) = s + " -> " + s
+  def edge(s: String, d: String) = s + " -> " + d
 
   def toDot(indentCount: Int): Seq[String] = this match {
     case Script(stmts) => stmts.flatMap(predecessor => {
