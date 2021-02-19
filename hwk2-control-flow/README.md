@@ -1,3 +1,7 @@
+Requirements: Java 8
+Scala: 2.11.*
+SBT: 1.4.7
+
 
 ## TestCase #1
 ```javascript
