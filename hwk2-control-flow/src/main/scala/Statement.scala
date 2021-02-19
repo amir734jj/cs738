@@ -141,27 +141,27 @@ sealed abstract class Statement extends AbstractSyntaxTree {
     case _ => this
   }
 
-  def exit: List[Statement] = this match {
+  def exit: Seq[Statement] = this match {
     case Script(stmts) => stmts.last.exit
     case BlockStmt(stmts) => stmts.last.exit
     case VarDeclListStmt(decls) => decls.last.exit
-    case IfStmt(cond, thenPart, elsePart) => thenPart.exit ::: (elsePart match {
-      case EmptyStmt() => List(thenPart)
+    case IfStmt(cond, thenPart, elsePart) => thenPart.exit ++ (elsePart match {
+      case EmptyStmt() => Seq(thenPart)
       case _ => elsePart.exit
     })
     case SwitchStmt(cond, cases, defaultCase) => (defaultCase match {
-      case Some(x) => cases ::: List(x)
+      case Some(x) => cases ++ Seq(x)
       case None => cases
     }).last.exit
     case CaseStmt(expr, body) => body.exit
     case LabeledStmt(label, stmt) => stmt.exit
-    case _ => List(this)
+    case _ => Seq(this)
   }
 
-  var successors = List[Statement]()
+  var successors = Seq[Statement]()
 
-  def appendSuccessor(s: Statement) = {
-    successors = s :: successors
+  def appendSuccessor(stmt: Statement) = {
+    successors = Seq(stmt) ++ successors
   }
 
   protected def visit(stmts: List[Statement]): Unit = {
@@ -184,16 +184,17 @@ sealed abstract class Statement extends AbstractSyntaxTree {
     case DoWhileStmt(cond, body) => {
       body.buildGraph
       appendSuccessor(body.entry)
-      body.exit.foreach(e => e.appendSuccessor(this))
+      body.exit.foreach(e => e appendSuccessor this)
     }
     case WhileStmt(cond, body) => {
       body.buildGraph
       appendSuccessor(body.entry)
-      body.exit foreach (e => e.appendSuccessor(this))
+      body.exit foreach (e => e appendSuccessor this)
     }
     case SwitchStmt(cond, cases, defaultCase) => {
+      // Aggregate switch branches (include defaultCase)
       val aggregatedCases = defaultCase match {
-        case Some(x) => cases ++ List(x)
+        case Some(x) => cases ++ Seq(x)
         case None => cases
       }
       visit(aggregatedCases)
@@ -228,28 +229,28 @@ sealed abstract class Statement extends AbstractSyntaxTree {
 
   def edge(s: String, d: String) = s + " -> " + s
 
-  def toDot(indentCount: Int): List[String] = this match {
+  def toDot(indentCount: Int): Seq[String] = this match {
     case Script(stmts) => stmts.flatMap(predecessor => {
-      predecessor.toDot(indentCount) ++ predecessor.successors.map(successor => edge(predecessor.dotStr, successor.dotStr))
+      (predecessor toDot indentCount) ++ (predecessor.successors map (successor => edge(predecessor.dotStr, successor.dotStr)))
     })
-    case BlockStmt(stmts) => stmts.flatMap(s => s.toDot(indentCount + 1) ++ s.successors.map(e => edge(s.dotStr, e.dotStr)))
-    case VarDeclListStmt(stmts) => stmts.flatMap(s => s.toDot(indentCount) ++ s.successors.map(e => edge(s.dotStr, e.dotStr)))
-    case IfStmt(cond, thenPart, elsePart) => thenPart.toDot(indentCount) ++ elsePart.toDot(indentCount)
-    case WhileStmt(cond, body) => List(toSubGraph(body.toDot(indentCount), this.id, indentCount))
-    case DoWhileStmt(cond, body) => List(toSubGraph(body.toDot(indentCount), this.id, indentCount))
-    case _ => List()
+    case BlockStmt(stmts) => stmts.flatMap(s => (s toDot indentCount + 1) ++ (s.successors map (e => edge(s.dotStr, e.dotStr))))
+    case VarDeclListStmt(stmts) => stmts.flatMap(s => (s toDot indentCount) ++ (s.successors map (e => edge(s.dotStr, e.dotStr))))
+    case IfStmt(cond, thenPart, elsePart) => (thenPart toDot indentCount) ++ (elsePart toDot indentCount)
+    case WhileStmt(cond, body) => Seq(toSubGraph(body toDot indentCount, this.id, indentCount))
+    case DoWhileStmt(cond, body) => Seq(toSubGraph(body toDot indentCount, this.id, indentCount))
+    case _ => Seq()
   }
 
   def toDotGraph =
     s"""digraph cs738_${this.getClass.getSimpleName} {
-       |${toDot(0).zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(0)}${x._1}")}
+       |${(toDot(0).zipWithIndex foldLeft "")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(0)}${x._1}")}
        |}""".stripMargin
 
-  def indent(count: Int) = (0 to count).foldLeft("")((acc, _) => acc + "  ")
+  def indent(count: Int) = (0 to count foldLeft "")((acc, _) => acc + "  ")
 
-  def toSubGraph(edges: List[String], id: Long, indentCount: Int) = {
+  def toSubGraph(edges: Seq[String], id: Long, indentCount: Int) = {
     s"""subgraph cluster_$id {
-       |${edges.zipWithIndex.foldLeft("")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(indentCount + 1)}${x._1}")}
+       |${(edges.zipWithIndex foldLeft "")((acc, x) => f"$acc${if (x._2 > 0) "\n" else ""}${indent(indentCount + 1)}${x._1}")}
        |${indent(indentCount)}}""".stripMargin
   }
 }
