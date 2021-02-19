@@ -2,7 +2,7 @@
 
 ## Requirements 
 
-- JDK version: Java 8
+- JDK version: Java 8 (scala 2.11.* needs JDK 8 to compile itself)
 - Scala: 2.11.*
 - SBT: 1.4.7
 
