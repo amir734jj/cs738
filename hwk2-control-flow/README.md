@@ -1,3 +1,7 @@
+# cs738 HW#2
+
+## Requirements 
+
 - JDK version: Java 8
 - Scala: 2.11.*
 - SBT: 1.4.7
