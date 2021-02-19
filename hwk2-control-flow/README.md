@@ -7,6 +7,13 @@
 - SBT: 1.4.7
 
 
+## Running the project
+
+```
+sbt compile
+sbt run
+```
+
 ## TestCase #1
 ```javascript
 var ret = 1;
