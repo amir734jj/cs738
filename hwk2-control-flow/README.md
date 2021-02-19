@@ -30,8 +30,7 @@ digraph cs738_Script {
 ```
 
 
-![Alt text](./simple-js.svg)
-<img src="./simple-js.svg">
+![simple.js](./simple-js.svg)
 
 
 ## TestCase #2
@@ -77,7 +76,6 @@ digraph cs738_Script {
 ```
 
 
-![Alt text](./while-js.svg)
-<img src="./while-js.svg">
+![while.js](./while-js.svg)
 
 
