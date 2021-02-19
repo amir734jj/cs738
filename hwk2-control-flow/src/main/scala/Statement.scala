@@ -214,19 +214,17 @@ sealed abstract class Statement extends AbstractSyntaxTree {
     case _ => ()
   }
 
-  def dotStr(): String = s"\"${
-    (this match {
-      case Script(stmts) => stmts.head.dotStr
-      case BlockStmt(stmts) => stmts.head.dotStr
-      case VarDeclListStmt(decls) => decls.head.dotStr
-      case IfStmt(cond, thenPart, elsePart) => cond.toString
-      case WhileStmt(cond, body) => cond.toString
-      case DoWhileStmt(cond, body) => cond.toString
-      case FunctionDecl(name, fun) => "function " + name
-      case EmptyStmt() => "<EmptyStmt>"
-      case _ => this.toString.trim
-    }).replaceAll(" ", " ")
-  }\""
+  def dotStr(): String = "\"%s\"".format((this match {
+    case Script(stmts) => stmts.head.dotStr
+    case BlockStmt(stmts) => stmts.head.dotStr
+    case VarDeclListStmt(decls) => decls.head.dotStr
+    case IfStmt(cond, thenPart, elsePart) => cond.toString
+    case WhileStmt(cond, body) => cond.toString
+    case DoWhileStmt(cond, body) => cond.toString
+    case FunctionDecl(name, fun) => "function " + name
+    case EmptyStmt() => "<EmptyStmt>"
+    case _ => this.toString.trim
+  }).replaceAll(" ", " "))
 
   def edge(s: String, d: String) = s + " -> " + s
 

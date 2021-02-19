@@ -1,5 +1,4 @@
 import java.io.File
-import .Graph
 
 object Main {
   def main(args: Array[String]) {
