@@ -29,6 +29,11 @@ digraph cs738_Script {
 }
 ```
 
+
+![Alt text](./simple-js.svg)
+<img src="./simple-js.svg">
+
+
 ## TestCase #2
 ```javascript
 var i = 0;
@@ -47,6 +52,7 @@ while (i < 4) {
 	console.log('j = ' + j);
 };
 ```
+
 
 ```
 digraph cs738_Script {
@@ -69,3 +75,9 @@ digraph cs738_Script {
   "i < 4.0" -> "console.log(i)"
 }
 ```
+
+
+![Alt text](./while-js.svg)
+<img src="./while-js.svg">
+
+
