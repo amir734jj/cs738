@@ -2,10 +2,17 @@
 
 ## Requirements 
 
-- JDK version: Java 8
+- JDK version: Java 8 (scala 2.11.* needs JDK 8 to compile itself)
 - Scala: 2.11.*
 - SBT: 1.4.7
 
+
+## Running the project
+
+```
+sbt compile
+sbt run
+```
 
 ## TestCase #1
 ```javascript
@@ -29,6 +36,10 @@ digraph cs738_Script {
 }
 ```
 
+
+![simple.js](./simple-js.svg)
+
+
 ## TestCase #2
 ```javascript
 var i = 0;
@@ -47,6 +58,7 @@ while (i < 4) {
 	console.log('j = ' + j);
 };
 ```
+
 
 ```
 digraph cs738_Script {
@@ -69,3 +81,8 @@ digraph cs738_Script {
   "i < 4.0" -> "console.log(i)"
 }
 ```
+
+
+![while.js](./while-js.svg)
+
+
