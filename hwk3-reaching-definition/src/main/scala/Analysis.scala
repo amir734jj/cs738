@@ -44,16 +44,74 @@ case class Analysis (stmt: Statement) {
   
   private def vars(stmts: List[Statement]): Set[String] = stmts.map(s => vars(s)).reduce((a,b)=>a.union(b))
 
+  def kill(stmt: Statement): Set[(String, Long)] = _
+
+  def gen(stmt: Statement): Set[(String, Long)] = _
+
   // worklist algorithm to compute reaching definitions at the entry/exit of each CFG node
   def worklist {
     // TODO: you can just implement this
 
-    var queue = Queue()
-    while(!queue.isEmpty) {
+    var changedSet = Queue[Statement](this.stmts: _*)
+    val table = this.stmts.map(x => x -> Node(x)).toMap
+    while(!changedSet.isEmpty) {
+      val n = changedSet.dequeue()
 
+      for (pred <- n.pred) {
+        table(n).entry += table(pred).exit
+      }
+
+      val oldOut = table(n).exit
+      table(n).exit = gen(n) + (table(n).entry - kill(n))
+
+      if (oldOut != table(n).exit) {
+        for (s <- n.succ) {
+          changedSet += s
+        }
+      }
     }
   }
-  
+
+  def buildGraph: Unit = this match {
+    case Script(stmts) => visit(stmts)
+    case BlockStmt(stmts) => visit(stmts)
+    case VarDeclStmt(name, expr) => ()
+    case VarDeclListStmt(decls) => visit(decls)
+    case DoWhileStmt(cond, body) => {
+      body.buildGraph
+      appendSuccessor(body.entry)
+      body.exit.foreach(e => e appendSuccessor this)
+    }
+    case WhileStmt(cond, body) => {
+      body.buildGraph
+      appendSuccessor(body.entry)
+      body.exit foreach (e => e appendSuccessor this)
+    }
+    case SwitchStmt(cond, cases, defaultCase) => {
+      // Aggregate switch branches (include defaultCase)
+      val aggregatedCases = defaultCase match {
+        case Some(x) => cases ++ Seq(x)
+        case None => cases
+      }
+      visit(aggregatedCases)
+      aggregatedCases foreach (c => appendSuccessor(c.entry))
+    }
+    case IfStmt(cond, thenPart, elsePart) => {
+      thenPart.buildGraph
+      appendSuccessor(thenPart.entry)
+      elsePart match {
+        case EmptyStmt() =>
+        case _ => {
+          elsePart.buildGraph
+          appendSuccessor(elsePart.entry)
+        }
+      }
+    }
+    case ExprStmt(expr) => ()
+    case _ => ()
+  }
+
+
   // make a dot graph with entry/exit reaching definition of every node
   def toDotGraph = {
     val entry = (s: Statement) => map(s).entry.toList.sortBy(x=>x).mkString(" ")
@@ -65,7 +123,7 @@ case class Analysis (stmt: Statement) {
 
 // CFG node to hold the reaching definitions at the entry/exit of a CFG statement
 case class Node(stmt: Statement) {
-  val entry = Set[(String, Long)]()
-  val exit = Set[(String, Long)]()
+  var entry = Set[(String, Long)]()
+  var exit = Set[(String, Long)]()
 }
  
