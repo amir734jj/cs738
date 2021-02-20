@@ -1,4 +1,5 @@
 import javax.tools.Diagnostic.Kind
+import scala.collection.mutable
 import scala.collection.mutable.Set
 import scala.collection.mutable.Queue
 
@@ -48,7 +49,9 @@ case class Analysis (stmt: Statement) {
   def kill(expr: Expression)(implicit stmt: Statement): Set[(String, Long)] = {
     expr match {
       case InfixExpr(op, expr1, expr2) => kill(expr1) ++ kill(expr2)
-      case AssignExpr(op, LVarRef(name), expr) => Set((name, -1))
+      case AssignExpr(op, LVarRef(name), expr) => {
+        Set((name, (-1).asInstanceOf[Long])) ++ stmts.map(x => (name, x.id.asInstanceOf[Long])).toSet
+      }
       case VarRef(name) => Set()
       case NumberLit(value) => Set()
     }
@@ -57,7 +60,10 @@ case class Analysis (stmt: Statement) {
   def kill(implicit stmt: Statement): Set[(String, Long)] = {
     stmt match {
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => kill(s) ++ acc)
-      case WhileStmt(cond, body) => kill(cond) ++ kill(body)
+      case WhileStmt(cond, body) => {
+//        kill(cond) ++ kill(body)
+        Set()
+      }
       case ExprStmt(expr) => kill(expr)
     }
   }
@@ -75,7 +81,10 @@ case class Analysis (stmt: Statement) {
     stmt match {
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => gen(s) ++ acc)
       case ExprStmt(expr) => gen(expr)
-      case WhileStmt(cond, body) => gen(cond) ++ gen(body)
+      case WhileStmt(cond, body) => {
+//        gen(cond) ++ gen(body)
+        Set()
+      }
     }
   }
 
@@ -84,7 +93,7 @@ case class Analysis (stmt: Statement) {
     // TODO: you can just implement this
 
     var changedSet = Queue[Statement](this.stmts: _*)
-    val table = this.nodes.map(x => x.stmt -> x).toMap
+    implicit val table = this.nodes.map(x => x.stmt -> x).toMap
     while(!changedSet.isEmpty) {
       val n = changedSet.dequeue()
 
