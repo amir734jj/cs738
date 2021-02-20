@@ -14,7 +14,7 @@ object Main {
     a.worklist
     
     for(n <- a.nodes.sortBy(x => x.stmt.id)) {
-      println(f"${n.stmt.id}%-4d ${n.entry.toList.sortBy(x=>x).mkString(" ")}%-40s ${n.exit.toList.sortBy(x=>x).mkString(" ")}")
+      println(f"${n.stmt.toString.take(10)} -- ${n.stmt.id}%-4d ${n.entry.toList.sortBy(x=>x).mkString(" ")}%-40s ${n.exit.toList.sortBy(x=>x).mkString(" ")}")
     }
     
     println

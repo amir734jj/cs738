@@ -1,3 +1,4 @@
+import javax.tools.Diagnostic.Kind
 import scala.collection.mutable.Set
 import scala.collection.mutable.Queue
 
@@ -44,25 +45,63 @@ case class Analysis (stmt: Statement) {
   
   private def vars(stmts: List[Statement]): Set[String] = stmts.map(s => vars(s)).reduce((a,b)=>a.union(b))
 
-  def kill(stmt: Statement): Set[(String, Long)] = _
+  def kill(expr: Expression)(implicit stmt: Statement): Set[(String, Long)] = {
+    expr match {
+      case InfixExpr(op, expr1, expr2) => kill(expr1) ++ kill(expr2)
+      case AssignExpr(op, LVarRef(name), expr) => Set((name, -1))
+      case VarRef(name) => Set()
+      case NumberLit(value) => Set()
+    }
+  }
 
-  def gen(stmt: Statement): Set[(String, Long)] = _
+  def kill(implicit stmt: Statement): Set[(String, Long)] = {
+    stmt match {
+      case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => kill(s) ++ acc)
+      case WhileStmt(cond, body) => kill(cond) ++ kill(body)
+      case ExprStmt(expr) => kill(expr)
+    }
+  }
+
+  def gen(expr: Expression)(implicit stmt: Statement): Set[(String, Long)] = {
+    expr match {
+      case AssignExpr(op, LVarRef(name), expr) => Set((name, stmt.id)) ++ gen(expr)
+      case InfixExpr(op, expr1, expr2) => gen(expr1) ++ gen(expr2)
+      case VarRef(name) => Set((name, stmt.id))
+      case NumberLit(value) => Set()
+    }
+  }
+
+  def gen(implicit stmt: Statement): Set[(String, Long)] = {
+    stmt match {
+      case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => gen(s) ++ acc)
+      case ExprStmt(expr) => gen(expr)
+      case WhileStmt(cond, body) => gen(cond) ++ gen(body)
+    }
+  }
 
   // worklist algorithm to compute reaching definitions at the entry/exit of each CFG node
   def worklist {
     // TODO: you can just implement this
 
     var changedSet = Queue[Statement](this.stmts: _*)
-    val table = this.stmts.map(x => x -> Node(x)).toMap
+    val table = this.nodes.map(x => x.stmt -> x).toMap
     while(!changedSet.isEmpty) {
       val n = changedSet.dequeue()
 
-      for (pred <- n.pred) {
-        table(n).entry += table(pred).exit
+      if (n.pred.isEmpty) {
+        table(n).entry = variables.map(v => (v, (-1).asInstanceOf[Long]))
       }
 
+      for (pred <- n.pred) {
+        table(n).entry ++= table(pred).exit
+      }
+
+      var k = kill(n)
+      var g = gen(n)
+      var e = table(n).entry
+
       val oldOut = table(n).exit
-      table(n).exit = gen(n) + (table(n).entry - kill(n))
+      table(n).exit = gen(n) ++ (table(n).entry -- kill(n))
 
       if (oldOut != table(n).exit) {
         for (s <- n.succ) {
@@ -71,46 +110,6 @@ case class Analysis (stmt: Statement) {
       }
     }
   }
-
-  def buildGraph: Unit = this match {
-    case Script(stmts) => visit(stmts)
-    case BlockStmt(stmts) => visit(stmts)
-    case VarDeclStmt(name, expr) => ()
-    case VarDeclListStmt(decls) => visit(decls)
-    case DoWhileStmt(cond, body) => {
-      body.buildGraph
-      appendSuccessor(body.entry)
-      body.exit.foreach(e => e appendSuccessor this)
-    }
-    case WhileStmt(cond, body) => {
-      body.buildGraph
-      appendSuccessor(body.entry)
-      body.exit foreach (e => e appendSuccessor this)
-    }
-    case SwitchStmt(cond, cases, defaultCase) => {
-      // Aggregate switch branches (include defaultCase)
-      val aggregatedCases = defaultCase match {
-        case Some(x) => cases ++ Seq(x)
-        case None => cases
-      }
-      visit(aggregatedCases)
-      aggregatedCases foreach (c => appendSuccessor(c.entry))
-    }
-    case IfStmt(cond, thenPart, elsePart) => {
-      thenPart.buildGraph
-      appendSuccessor(thenPart.entry)
-      elsePart match {
-        case EmptyStmt() =>
-        case _ => {
-          elsePart.buildGraph
-          appendSuccessor(elsePart.entry)
-        }
-      }
-    }
-    case ExprStmt(expr) => ()
-    case _ => ()
-  }
-
 
   // make a dot graph with entry/exit reaching definition of every node
   def toDotGraph = {
