@@ -35,7 +35,7 @@ while (x > 1) {
 7    (x,2) (x,7) (y,6)                        (x,7) (y,6)
 ```
 
-![rd-js](./rd-js.svg)
+![rd-js](./rd1-js.svg)
 
 
 ## Example #2
@@ -66,4 +66,4 @@ x = y +z;
 10   (x,3) (y,9) (z,6) (z,8)                  (x,10) (y,9) (z,6) (z,8)
 ```
 
-![rd1-js](./rd1-js.svg)
+![rd1-js](./rd-js.svg)
