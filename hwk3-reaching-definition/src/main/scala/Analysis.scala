@@ -49,9 +49,7 @@ case class Analysis (stmt: Statement) {
   def kill(expr: Expression)(implicit stmt: Statement): Set[(String, Long)] = {
     expr match {
       case InfixExpr(op, expr1, expr2) => kill(expr1) ++ kill(expr2)
-      case AssignExpr(op, LVarRef(name), expr) => {
-        Set((name, (-1).asInstanceOf[Long])) ++ stmts.map(x => (name, x.id.asInstanceOf[Long])).toSet
-      }
+      case AssignExpr(op, LVarRef(name), expr) => Set((name, (-1).asInstanceOf[Long])) ++ stmts.map(x => (name, x.id)).toSet
       case VarRef(name) => Set()
       case NumberLit(value) => Set()
     }
@@ -59,11 +57,9 @@ case class Analysis (stmt: Statement) {
 
   def kill(implicit stmt: Statement): Set[(String, Long)] = {
     stmt match {
+      case IfStmt(cond, thenPart, elsePart) => Set()
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => kill(s) ++ acc)
-      case WhileStmt(cond, body) => {
-//        kill(cond) ++ kill(body)
-        Set()
-      }
+      case WhileStmt(cond, body) => Set()
       case ExprStmt(expr) => kill(expr)
     }
   }
@@ -72,19 +68,17 @@ case class Analysis (stmt: Statement) {
     expr match {
       case AssignExpr(op, LVarRef(name), expr) => Set((name, stmt.id)) ++ gen(expr)
       case InfixExpr(op, expr1, expr2) => gen(expr1) ++ gen(expr2)
-      case VarRef(name) => Set((name, stmt.id))
+      case VarRef(name) => Set()
       case NumberLit(value) => Set()
     }
   }
 
   def gen(implicit stmt: Statement): Set[(String, Long)] = {
     stmt match {
+      case IfStmt(cond, thenPart, elsePart) => Set()
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => gen(s) ++ acc)
       case ExprStmt(expr) => gen(expr)
-      case WhileStmt(cond, body) => {
-//        gen(cond) ++ gen(body)
-        Set()
-      }
+      case WhileStmt(cond, body) => Set()
     }
   }
 
@@ -104,10 +98,6 @@ case class Analysis (stmt: Statement) {
       for (pred <- n.pred) {
         table(n).entry ++= table(pred).exit
       }
-
-      var k = kill(n)
-      var g = gen(n)
-      var e = table(n).entry
 
       val oldOut = table(n).exit
       table(n).exit = gen(n) ++ (table(n).entry -- kill(n))
