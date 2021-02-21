@@ -17,6 +17,16 @@ sbt run
 
 ## Example #1
 
+```javascript
+
+```
+x = 5;
+y = 1;
+
+while (x > 1) {
+	y = x * y;
+	x = x -1;
+}
 ```
 2    (x,-1) (y,-1)                            (x,2) (y,-1)
 3    (x,2) (y,-1)                             (x,2) (y,3)
@@ -30,6 +40,22 @@ sbt run
 
 ## Example #2
 
+
+```javascript
+
+```
+x = 0;
+x = 3;
+
+if (z == x) {
+	z = 0
+}
+else {
+	z = x;
+}
+
+y = x;
+x = y +z;
 ```
 2    (x,-1) (y,-1) (z,-1)                     (x,2) (y,-1) (z,-1)
 3    (x,2) (y,-1) (z,-1)                      (x,3) (y,-1) (z,-1)
