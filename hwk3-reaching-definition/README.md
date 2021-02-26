@@ -1,5 +1,5 @@
 # cs738 HW#3
-Reaching Definiton Analysis using Worklist
+Reaching Definition Analysis using Worklist.
 
 ## Requirements 
 
@@ -67,3 +67,22 @@ x = y +z;
 ```
 
 ![rd-js](./rd-js.svg)
+
+
+## Example #3
+
+```javascript
+var x = 5;
+var y = 1;
+
+while (x > 1) {
+    if(y < 100) {
+        y = x * y;
+    }
+    else {
+        x = x -1;
+    }
+}
+```
+
+![rd2-js](./rd2-js.svg)

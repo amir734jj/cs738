@@ -57,6 +57,7 @@ case class Analysis (stmt: Statement) {
 
   def kill(implicit stmt: Statement): Set[(String, Long)] = {
     stmt match {
+      case VarDeclStmt(name, expr) => Set((name.str, (-1).asInstanceOf[Long])) ++ stmts.map(x => (name.str, x.id)).toSet
       case IfStmt(cond, thenPart, elsePart) => Set()
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => kill(s) ++ acc)
       case WhileStmt(cond, body) => Set()
@@ -75,6 +76,7 @@ case class Analysis (stmt: Statement) {
 
   def gen(implicit stmt: Statement): Set[(String, Long)] = {
     stmt match {
+      case VarDeclStmt(name, expr) => Set((name.str, stmt.id)) ++ gen(expr)
       case IfStmt(cond, thenPart, elsePart) => Set()
       case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => gen(s) ++ acc)
       case ExprStmt(expr) => gen(expr)
