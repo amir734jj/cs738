@@ -100,26 +100,71 @@ trait Analysis[L <: Lattice[L]] {
   override def toString =  cfg.nodes.sortBy(x => x.stmt.id).map(n => f"${n.stmt.id}%-4d ${real_entry(n)}%-40s ${real_exit(n)}").mkString("\n")
 }
 
-case class SomeLattice() extends Lattice[SomeLattice] {
-  override def lub(that: SomeLattice): SomeLattice = ???
+def kill(expr: Expression)(implicit stmt: Statement, cfg: CFG): Set[(String, Long)] = {
+  expr match {
+    case InfixExpr(op, expr1, expr2) => kill(expr1) ++ kill(expr2)
+    case AssignExpr(op, LVarRef(name), expr) => Set((name, (-1).asInstanceOf[Long])) ++ cfg.stmts.map(x => (name, x.id)).toSet
+    case VarRef(name) => Set()
+    case NumberLit(value) => Set()
+  }
 }
 
-case class RD(stmt: Statement) extends Analysis[SomeLattice] {
+def kill(implicit stmt: Statement, cfg: CFG): Set[(String, Long)] = {
+  stmt match {
+    case VarDeclStmt(name, expr) => Set((name.str, (-1).asInstanceOf[Long])) ++ cfg.stmts.map(x => (name.str, x.id)).toSet
+    case IfStmt(cond, thenPart, elsePart) => Set()
+    case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => kill(s, cfg) ++ acc)
+    case WhileStmt(cond, body) => Set()
+    case ExprStmt(expr) => kill(expr)
+  }
+}
+
+def gen(expr: Expression)(implicit stmt: Statement, cfg: CFG): Set[(String, Long)] = {
+  expr match {
+    case AssignExpr(op, LVarRef(name), expr) => Set((name, stmt.id)) ++ gen(expr)
+    case InfixExpr(op, expr1, expr2) => gen(expr1) ++ gen(expr2)
+    case VarRef(name) => Set()
+    case NumberLit(value) => Set()
+  }
+}
+
+def gen(implicit stmt: Statement, cfg: CFG): Set[(String, Long)] = {
+  stmt match {
+    case VarDeclStmt(name, expr) => Set((name.str, stmt.id)) ++ gen(expr)
+    case IfStmt(cond, thenPart, elsePart) => Set()
+    case BlockStmt(stmts) => stmts.foldLeft(Set[(String, Long)]())((acc, s) => gen(s, cfg) ++ acc)
+    case ExprStmt(expr) => gen(expr)
+    case WhileStmt(cond, body) => Set()
+  }
+}
+
+// UnionLattice
+case class UnionLattice[T](set: Set[T]) extends Lattice[UnionLattice[T]] {
+  // least upper bound or join (supremum)
+  override def lub(that: UnionLattice[T]): UnionLattice[T] = UnionLattice(set union that.set)
+
+  // greatest lower bound or meet (infimum)
+  def glb(that: UnionLattice[T]): UnionLattice[T] = UnionLattice(set intersect that.set)
+}
+
+type UnionLatticeStmt = UnionLattice[Statement]
+
+case class RD(stmt: Statement) extends Analysis[UnionLatticeStmt] {
   override val cfg: CFG = ForwardCFG(stmt)
-  override val extremalValue: SomeLattice = _
-  override val bottom: SomeLattice = _
-  override val entry: mutable.Map[Node, SomeLattice] = _
-  override val exit: mutable.Map[Node, SomeLattice] = _
+  override val extremalValue: UnionLatticeStmt = new UnionLatticeStmt(Set(cfg.stmts:_*))
+  override val bottom: UnionLatticeStmt = new UnionLatticeStmt(Set())
+  override val entry: mutable.Map[Node, UnionLatticeStmt] = _
+  override val exit: mutable.Map[Node, UnionLatticeStmt] = _
 
-  override def transfer(stmt: Statement, l: SomeLattice): SomeLattice = ???
+  override def transfer(stmt: Statement, l: UnionLatticeStmt): UnionLatticeStmt = new UnionLatticeStmt((l.set -- kill(stmt, cfg)) ++ gen(stmt, cfg))
 }
 
-case class LV(stmt: Statement) extends Analysis[SomeLattice] {
+case class LV(stmt: Statement) extends Analysis[UnionLatticeStmt] {
   override val cfg: CFG = BackwardCFG(stmt)
-  override val extremalValue: SomeLattice = _
-  override val bottom: SomeLattice = _
-  override val entry: mutable.Map[Node, SomeLattice] = _
-  override val exit: mutable.Map[Node, SomeLattice] = _
+  override val extremalValue: UnionLatticeStmt = new UnionLatticeStmt(Set())
+  override val bottom: UnionLatticeStmt = new UnionLatticeStmt(Set())
+  override val entry: mutable.Map[Node, UnionLatticeStmt] = _
+  override val exit: mutable.Map[Node, UnionLatticeStmt] = _
 
-  override def transfer(stmt: Statement, l: SomeLattice): SomeLattice = ???
+  override def transfer(stmt: Statement, l: UnionLatticeStmt): UnionLatticeStmt = new UnionLatticeStmt((l.set -- kill(stmt, cfg)) ++ gen(stmt, cfg))
 }
