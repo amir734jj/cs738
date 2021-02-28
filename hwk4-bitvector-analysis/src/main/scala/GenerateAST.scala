@@ -1,4 +1,13 @@
-import java.io.{File, FileReader}
+import java.io.{FileReader, File}
+import AssignOp.AssignOp
+import InfixOp.InfixOp
+import PrefixOp.PrefixOp
+
+import scala.collection.JavaConverters._
+
+import org.mozilla.javascript.ast._
+import org.mozilla.javascript.{Token, Parser, CompilerEnvirons}
+
 import scala.collection.mutable.ListBuffer
 
 /**
