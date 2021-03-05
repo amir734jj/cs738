@@ -17,6 +17,8 @@ sbt run
 
 ### Live variable analysis
 
+Test file: `lv.js`
+
 ```javascript
 var x = 2;
 var y = 4; 
@@ -45,6 +47,7 @@ x = z;
 
 ### Reaching Definition Analysis
 
+Test file: `rd1.js`
 
 ```javascript
 var x = 5;
@@ -70,3 +73,32 @@ x = y;
 ```
 
 ![rd1-js](./rd1-js.svg)
+
+Test file: `rd.js`
+
+```javascript
+var x = 0;
+x = 3;
+
+if (z == x) {
+	z = 0
+}
+else {
+	z = x;
+}
+
+y = x;
+x = y +z;
+```
+
+```
+2    (x,-1) (y,-1) (z,-1)                     (x,2) (y,-1) (z,-1)
+3    (x,2) (y,-1) (z,-1)                      (x,3) (y,-1) (z,-1)
+4    (x,3) (y,-1) (z,-1)                      (x,3) (y,-1) (z,-1)
+6    (x,3) (y,-1) (z,-1)                      (x,3) (y,-1) (z,6)
+8    (x,3) (y,-1) (z,-1)                      (x,3) (y,-1) (z,8)
+9    (x,3) (y,-1) (z,6) (z,8)                 (x,3) (y,9) (z,6) (z,8)
+10   (x,3) (y,9) (z,6) (z,8)                  (x,10) (y,9) (z,6) (z,8)
+```
+
+![rd-js](./rd-js.svg)
