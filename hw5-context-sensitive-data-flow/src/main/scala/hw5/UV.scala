@@ -110,11 +110,11 @@ case class CSVars(csVars: Set[(Context, String)]) extends Lattice[CSVars] {
     CSVars(gen ++ csVars -- kill)
   }
 
-  def gen(l: String) = CSVars(csVars ++ contexts.map(ctx => (ctx, l)))
+  def gen(l: String) = CSVars(csVars ++ contexts.map((_, l)))
 
   def gen(ls: List[String]) = CSVars(csVars ++ contexts.flatMap(ctx => ls.map((ctx, _))))
 
-  def extend(lc: Long) = CSVars(contexts.map(ctx => ctx.extend(lc)).map((_, Util.zero)))
+  def extend(lc: Long) = CSVars(contexts.map(_.extend(lc)).map((_, Util.zero)))
 
   override def toString = f"{ ${csVars.toList.sortBy{ case (_, str) => str }.mkString(", ")} }"
 }
@@ -130,8 +130,8 @@ case class CSUV(stmt: Statement) extends Analysis[CSVars] {
     stmt match {
       case VarDeclStmt(IntroduceVar(y), e) => {
         e match {
-          case EmptyExpr() => CSVars(l.csVars)      // var y;
-          case _ => l.resolve(y, e)                  // var y = e;
+          case EmptyExpr() => l.gen(y)     // var y;
+          case _ => l.resolve(y, e)        // var y = e;
         }
       }
       case ExprStmt(AssignExpr(_, LVarRef(y), e)) => l.resolve(y, e) // y = e;
