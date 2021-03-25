@@ -24,7 +24,7 @@ object ContextSensitiveLattice {
 
     val initialized = (e: Expression, ctx: Context) => (Util.fv(e) intersect variables(ctx)).isEmpty
 
-    val resolve = (label: String, e: Expression) => {
+    def apply (label: String, e: Expression) = {
       val gen = contexts filter (!initialized(e, _)) map ((_, label))
       val kill = contexts filter (initialized(e, _)) map ((_, label))
       ContextSensitiveLattice(self.vars -- kill ++ gen)
@@ -59,8 +59,8 @@ case class CSUV(stmt: Statement) extends Analysis[ContextSensitiveLattice] {
       def resolve(args: List[Expression]) = {
         val Some(FunctionDecl(_, FunctionExpr(_, ps, _))) = to.f
         val params = ps.map(p => p.str).distinct
-        val gen = lattice.contexts.flatMap(ctx => (params zip args withFilter { case (_, e) => !(lattice initialized(e, ctx)) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
-        val kill = lattice.contexts.flatMap(ctx => (params zip args withFilter { case (_, e) => lattice initialized(e, ctx) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
+        val gen = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => !(lattice initialized(e, ctx)) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
+        val kill = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => lattice initialized(e, ctx) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
         ContextSensitiveLattice((lattice.extendWith(stmt.id) gen (params: _*)).vars -- kill ++ gen) // function f(x, y) { ... }   f(10);
       }
 
@@ -81,8 +81,8 @@ case class CSUV(stmt: Statement) extends Analysis[ContextSensitiveLattice] {
       val callSiteLattice = entry(cfg.call_ret(n)) // dataflow facts before the call
 
       def resolve(x: String) = {
-        val kill = lattice.contexts.filter(ctx => !(lattice.vars contains(ctx extend stmt.id, Util.ret))) map (ctx => (ctx, x))
-        val gen = lattice.contexts.filter(ctx => lattice.vars contains(ctx extend stmt.id, Util.ret)) map (ctx => (ctx, x))
+        val kill = lattice.contexts filter (ctx => !(lattice.vars contains(ctx extend stmt.id, Util.ret))) map (ctx => (ctx, x))
+        val gen = lattice.contexts filter (ctx => lattice.vars contains(ctx extend stmt.id, Util.ret)) map (ctx => (ctx, x))
         ContextSensitiveLattice(callSiteLattice.vars -- kill ++ gen)
       }
 
@@ -102,10 +102,10 @@ case class CSUV(stmt: Statement) extends Analysis[ContextSensitiveLattice] {
       case VarDeclStmt(IntroduceVar(y), e) =>
         e match {
           case EmptyExpr() => lattice gen y // var y;
-          case _ => lattice resolve(y, e) // var y = e;
+          case _ => lattice (y, e) // var y = e;
         }
-      case ExprStmt(AssignExpr(_, LVarRef(y), e)) => lattice resolve(y, e) // y = e;
-      case ReturnStmt(e) => lattice resolve(Util.ret, e) // return e;
+      case ExprStmt(AssignExpr(_, LVarRef(y), e)) => lattice (y, e) // y = e;
+      case ReturnStmt(e) => lattice (Util.ret, e) // return e;
       case _ => lattice
     }
   }
