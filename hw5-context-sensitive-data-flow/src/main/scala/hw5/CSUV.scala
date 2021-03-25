@@ -16,7 +16,7 @@ case class Context(callStrings: List[Long]) {
 
 object ContextSensitiveLattice {
   implicit def latticeToObject(self: ContextSensitiveLattice) = new {
-    val contexts: Set[Context] = self.vars.map { case (context, _) => context }
+    val contexts: Set[Context] = self.vars map { case (context, _) => context }
 
     val variables = (ctx: Context) => self.vars
       .filter { case (context, _) => context == ctx }
