@@ -7,7 +7,7 @@ object Main {
     ast.prep
     ast.buildGraph
 
-    val a = RD(ast)
+    val a = VB(ast)
 //        val a = LV(ast)
 
     a.worklist

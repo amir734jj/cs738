@@ -255,3 +255,37 @@ case class LV(stmt: Statement) extends Analysis[UnionLatticeVariable] {
     new UnionLatticeVariable(gen(stmt) ++ (l.set -- kill(stmt)))
   }
 }
+
+case class AExp(exps: Set[Expression]) extends Lattice[AExp] {
+  override def lub(that: AExp): AExp = AExp(exps intersect (that.exps))
+
+  override def toString: String = f"[${exps.map(x => f"{$x}").mkString(", ")}]"
+}
+
+case class VB(stmt: Statement) extends Analysis[AExp] {
+  override val cfg: CFG = BackwardCFG(stmt)
+  override val extremalValue: AExp = AExp(Set())
+  override val bottom: AExp = AExp(Set() ++ Util.aexp(stmt))
+  override val entry: mutable.Map[Node, AExp] = real_exit
+  override val exit: mutable.Map[Node, AExp] = real_entry
+
+  override def transfer(stmt: Statement, l: AExp): AExp = {
+    def kill_gen(y: String, e: Expression) = {
+      AExp((l.exps).filter(!Util.fv(_).contains(y)) ++ Util.aexp(e))
+    }
+
+    def gen(e: Expression) = AExp(l.exps ++ Util.aexp(e))
+
+    stmt match {
+      case ExprStmt(AssignExpr(_, LVarRef(name), e)) => kill_gen(name, e)
+      case ExprStmt(expr) => gen(expr)
+      case VarDeclStmt(IntroduceVar(y), expr) => expr match {
+        case EmptyExpr() => l
+        case _=> kill_gen(y, expr)
+      }
+      case IfStmt(cond, _, _) => gen(cond)
+      case WhileStmt(cond, _) => gen(cond)
+      case _ => l // no change!
+    }
+  }
+}
