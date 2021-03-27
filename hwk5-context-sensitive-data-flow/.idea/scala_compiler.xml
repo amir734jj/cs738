@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="sbt 1" modules="hw5-context-sensitive-data-flow,hwk5-context-sensitive-data-flow">
+    <profile name="sbt 1" modules="hw5-context-sensitive-data-flow">
       <option name="implicitConversions" value="true" />
     </profile>
+    <profile name="sbt 2" modules="hwk5-context-sensitive-data-flow" />
   </component>
 </project>
