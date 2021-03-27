@@ -27,6 +27,8 @@ var a = f(10);
 var b = f(b);
 ```
 
+![uv-js](./uv-js.png)
+
 ## Example #2
 
 ```javascript
@@ -43,3 +45,4 @@ var a = f(10);
 
 var b = f(b);
 ```
+![uv1-js](./uv1-js.png)
