@@ -22,11 +22,11 @@ object ContextSensitiveLattice {
       .filter { case (context, _) => context == ctx }
       .map { case (_, str) => str }
 
-    val initialized = (e: Expression, ctx: Context) => (Util.fv(e) intersect variables(ctx)).isEmpty
+    val isInitialized = (e: Expression, ctx: Context) => (Util.fv(e) intersect variables(ctx)).isEmpty
 
     def apply (label: String, e: Expression) = {
-      val gen = contexts filter (!initialized(e, _)) map ((_, label))
-      val kill = contexts filter (initialized(e, _)) map ((_, label))
+      val gen = contexts filter (!isInitialized(e, _)) map ((_, label))
+      val kill = contexts filter (isInitialized(e, _)) map ((_, label))
       ContextSensitiveLattice(self.vars -- kill ++ gen)
     }
 
@@ -59,8 +59,8 @@ case class CSUV(stmt: Statement) extends Analysis[ContextSensitiveLattice] {
       def resolve(args: List[Expression]) = {
         val Some(FunctionDecl(_, FunctionExpr(_, ps, _))) = to.f
         val params = ps.map(p => p.str).distinct
-        val gen = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => !(lattice initialized(e, ctx)) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
-        val kill = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => lattice initialized(e, ctx) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
+        val gen = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => !(lattice isInitialized(e, ctx)) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
+        val kill = lattice.contexts flatMap (ctx => (params zip args withFilter { case (_, e) => lattice isInitialized(e, ctx) }).map { case (y, _) => (ctx.extend(stmt.id), y) })
         ContextSensitiveLattice((lattice.extendWith(stmt.id) gen (params: _*)).vars -- kill ++ gen) // function f(x, y) { ... }   f(10);
       }
 
@@ -95,7 +95,7 @@ case class CSUV(stmt: Statement) extends Analysis[ContextSensitiveLattice] {
   }
 
   // are variables in 'e' all initialized
-  def initialized(e: Expression, lattice: ContextSensitiveLattice) = (Util fv e intersect (lattice.vars map { case (_, str) => str })).isEmpty
+  def isInitialized = (e: Expression, lattice: ContextSensitiveLattice) => (Util fv e intersect (lattice.vars map { case (_, str) => str })).isEmpty
 
   def transfer(stmt: Statement, lattice: ContextSensitiveLattice) = {
     stmt match {
