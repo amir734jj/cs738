@@ -55,9 +55,9 @@ case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
       def h(args: List[Expression]): BinaryMap = {
         val Some(FunctionDecl(_, FunctionExpr(_, ps, _))) = to.f
         val params = ps.map(_.str)
-        val r1 = (Set(Util.zero) ++ params.drop(args.length)).map(x => (Util.zero, x))
+        val r1 = (Set(Util.zero) ++ (params drop args.length)).map(x => (Util.zero, x))
         val r2 = (params zip args).flatMap {
-          case (formal, actual) => l.vars.withFilter { case (_, sink) => Util.fv(actual).contains(sink) }.map {
+          case (formal, actual) => (l.vars withFilter { case (_, sink) => Util.fv(actual) contains sink }).map {
             case (source, _) => (source, formal)
           }
         }
@@ -86,9 +86,9 @@ case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
 
       def h(label: String) = {
         BinaryMap(callExit.vars
-          .filter { case (_, sink) => l.vars.contains((sink, Util.ret)) }
+          .filter { case (_, sink) => l.vars contains(sink, Util.ret) }
           .map { case (source, _) => (source, label) } ++
-          callEntry.vars.filter { case (_, sink) => sink != label })
+          (callEntry.vars filter { case (_, sink) => sink != label }))
       }
 
       stmt match {
@@ -105,7 +105,7 @@ case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
     stmt match {
       case VarDeclStmt(IntroduceVar(y), e) => {
         e match {
-          case EmptyExpr() => l.gen(y) // var y;
+          case EmptyExpr() => l gen y // var y;
           case _ => l(y, e) // var y = e;
         }
       }
