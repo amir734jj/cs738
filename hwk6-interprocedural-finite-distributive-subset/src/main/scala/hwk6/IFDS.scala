@@ -3,19 +3,48 @@ package hwk6
 import common._
 import interprocedural._
 
+object BinaryMap {
+
+  implicit def latticeToObject(self: BinaryMap) = new {
+    def gen(labels: String*) = BinaryMap(self.vars ++ labels.map((Util.zero, _)))
+
+    def apply(label: String, e: Expression) = {
+      val gen = Util.fv(e)
+      BinaryMap {
+        self.vars.flatMap { case (source, sink) => {
+          if (gen.contains(sink))
+            Set(label)
+          else if (sink != label)
+            Set(sink)
+          else
+            Set[String]()
+        }.map((source, _))
+        }
+      }
+    }
+  }
+}
+
 case class BinaryMap(vars: Set[(String, String)]) extends Lattice[BinaryMap] {
   def lub(that: BinaryMap) = BinaryMap(vars.union(that.vars))
 
   override def toString = "{" + vars.toList.sortBy(_._1).sortBy(_._2).mkString(", ") + "}"
 }
 
+object IFDS {
+
+}
+
 // uninitialized variables: forward and may analysis
 case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
+
+  import IFDS._
+
   val cfg = ForwardCFG(stmt)
   val entry = real_entry
   val exit = real_exit
 
-  val extremalValue = BinaryMap(Util.vars(stmt).map((Util.zero, _)))
+  val extremalValue = BinaryMap(Set((Util.zero, Util.zero)) ++ (Util.vars(stmt) map ((Util.zero, _))))
   val bottom = BinaryMap(Set())
 
   def transfer(node: Node, l: BinaryMap) = node match {
@@ -25,9 +54,14 @@ case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
     case CallNode(stmt, to) => {
       def h(args: List[Expression]): BinaryMap = {
         val Some(FunctionDecl(_, FunctionExpr(_, ps, _))) = to.f
-        val params = ps.map(p => p.str)
-        val s = for ((p, e) <- params zip args; if initialized(e, l)) yield p
-        BinaryMap((params.toSet -- s).map(x => (Util.zero, x))) // function f(x, y) { ... }   f(10);
+        val params = ps.map(_.str)
+        val r1 = (Set(Util.zero) ++ params.drop(args.length)).map(x => (Util.zero, x))
+        val r2 = (params zip args).flatMap {
+          case (formal, actual) => l.vars.withFilter { case (_, sink) => Util.fv(actual).contains(sink) }.map {
+            case (source, _) => (source, formal)
+          }
+        }
+        BinaryMap(r1 ++ r2) // function f(x, y) { ... }   f(10);
       }
 
       stmt match {
@@ -39,48 +73,44 @@ case class IFDS(stmt: Statement) extends Analysis[BinaryMap] {
     }
     // add variables appearing in the body of the function and the return variable
     case EntryNode(Some(FunctionDecl(_, FunctionExpr(_, ps, stmt)))) => {
-      BinaryMap(l.vars ++ (Util.vars(stmt) -- ps.map(p => p.str)).map(x => (Util.zero, x)) ++ Set((Util.zero, Util.ret))) // uninitialized parameters + all local variables (minus parameters) + return variable
+      BinaryMap(l.vars.map { case (_, sink) => (sink, sink) })
+        .gen((Util.vars(stmt) -- ps.map(x => x.str) ++ Set(Util.ret)).toSeq: _*) // uninitialized parameters + all local variables (minus parameters) + return variable
     }
 
-    case ExitNode(Some(_)) => BinaryMap(l.vars.filter { case (_, sink) => sink == Util.ret}) // keep the return variable if it is present
+    case ExitNode(Some(_)) => BinaryMap(l.vars.filter { case (_, sink) => sink == Util.ret }) // keep the return variable if it is present
 
     case n@RetNode(stmt, _) => {
-      val lc = entry(cfg.call_ret(n)) // dataflow facts before the call
+      val call = cfg.call_ret(n)
+      val callEntry = entry(call)
+      val callExit = exit(call)
 
-      def h(x: String) = {
-        val s: Set[(String, String)] = if (l.vars.exists{ case (source, _) => source == Util.ret}) {
-          lc.vars ++ Set((Util.ret, x))
-        } else {
-          lc.vars -- Set((Util.ret, x))
-        }
-        BinaryMap(s)
+      def h(label: String) = {
+        BinaryMap(callExit.vars
+          .filter { case (_, sink) => l.vars.contains((sink, Util.ret)) }
+          .map { case (source, _) => (source, label) } ++
+          callEntry.vars.filter { case (_, sink) => sink != label })
       }
 
       stmt match {
         case ExprStmt(AssignExpr(_, LVarRef(x), FuncCall(_, _))) => h(x) // x = f(e);
         case VarDeclStmt(IntroduceVar(x), FuncCall(_, _)) => h(x) // var x = f(e);
-        case _ => lc // f(e);
+        case _ => callEntry // f(e);
       }
     }
 
     case _ => l
   }
 
-  // are variables in 'e' all initialized
-  def initialized(e: Expression, l: BinaryMap) = Util.fv(e).exists(fv => l.vars.exists { case (source, _) => source == fv})
-
   def transfer(stmt: Statement, l: BinaryMap): BinaryMap = {
-    def kill_gen(y: String, e: Expression) = BinaryMap(if (initialized(e, l)) l.vars -- Set((Util.zero, y)) else l.vars ++ Set((Util.zero, y)))
-
     stmt match {
       case VarDeclStmt(IntroduceVar(y), e) => {
         e match {
-          case EmptyExpr() => BinaryMap(l.vars ++ Set((Util.zero, y))) // var y;
-          case _ => kill_gen(y, e) // var y = e;
+          case EmptyExpr() => l.gen(y) // var y;
+          case _ => l(y, e) // var y = e;
         }
       }
-      case ExprStmt(AssignExpr(_, LVarRef(y), e)) => kill_gen(y, e) // y = e;
-      case ReturnStmt(e) => kill_gen(Util.ret, e) // return e;
+      case ExprStmt(AssignExpr(_, LVarRef(y), e)) => l(y, e) // y = e;
+      case ReturnStmt(e) => l(Util.ret, e) // return e;
       case _ => l
     }
   }
