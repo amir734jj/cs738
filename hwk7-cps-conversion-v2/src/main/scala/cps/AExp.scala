@@ -140,9 +140,18 @@ object CPS {
         check_tail(k, h)
       }
       case WhileStmt(cond, body) => {
-        val c = KVar(gensym("k"))
+        val h = (c: KVar) => {
+          val break = KVar(gensym("break"))
 
-        val h = (c: KVar) => t_k(cond, b => While(b, t_c(body, kmap ++ Map("break" -> c, "continue" -> c), c)))
+          val m = kmap ++ Map("break" -> break, "continue" -> c)
+
+          KLet(
+            break,
+              KLam(UVar("_"), KApp(c, UVar("ret"))),
+                KLet(c,
+                  KLam(UVar("_"), t_k(cond, b => If(b, t_c(body, m, c), t_c(EmptyStmt(), m, c)))),
+                    KApp(c, Void)))
+        }
         check_tail(k, h)
       }
       case ExprStmt(e) => t_k(e, k)
