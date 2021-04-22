@@ -4,7 +4,7 @@ import java.io.File
 
 object Main {
   def main(args: Array[String]) {
-    val ast = GenerateAST(new File("test/uv1.js"))
+    val ast = GenerateAST(new File("test/fact.js"))
 
         ast.prep
         ast.buildGraph(Map())
