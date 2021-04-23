@@ -145,7 +145,9 @@ object CPS {
           val loopLabel = KVar(gensym("k"))
           val breakLabel = KVar(gensym("k"))
           val breakLambda = KLam(UVar("_"), done)
-          val loopLambda = KLam(UVar("_"), t_k(cond, b => If(b, t_c(body, kmap ++ Map("break" -> breakLabel, "continue" -> loopLabel), continuationLabel), done)))
+          val updatedMap = kmap ++ Map("break" -> breakLabel, "continue" -> loopLabel)
+          val conditional: AExp => CExp = b => If(b, t_c(body, updatedMap, loopLabel), done)
+          val loopLambda = KLam(UVar("_"), t_k(cond, conditional))
           val loopInvocation = KApp(loopLabel, Void)
 
           KLet(
