@@ -1,6 +1,7 @@
 
 
-## `fact.js`
+- [x] `fact.js`
+Matches expected result
 
 Before
 ```javascript
@@ -42,7 +43,9 @@ let k11 = x9 => {
 fact(3.0, k11)
 ```
 
-## `fact2.js`
+- [x] `fact2.js`
+Matches expected result but variable names are off by 1
+
 Before:
 
 ```javascript
@@ -75,7 +78,7 @@ function fact(n, k1) {
         if (u5) {
             ret = ret * n
             n = n - 1.0
-            k1(n)
+            k3(n)
         } else {
             k1(ret)
         }
@@ -89,7 +92,8 @@ let k8 = x6 => {
 }
 fact(3.0, k8)
 ```
-## `fact3.js`
+- [x] `fact3.js`
+Matches expected result but variable names are off by 1
 
 Before:
 ```javascript
@@ -123,7 +127,7 @@ function fact(n, k1) {
             let k7 = x6 => {
                 ret = ret * n
                 n = n - 1.0
-                k1(n)
+                k3(n)
             }
             let u8 = ret > 1000.0
             if (u8) {
@@ -145,7 +149,8 @@ let k11 = x9 => {
 fact(3.0, k11)
 ```
 
-## `fact4.js`
+- [x] `fact4.js`
+Matches expected result but variable names are off by 1
 
 Before:
 ```javascript
@@ -170,44 +175,44 @@ After:
 ```javascript
 let halt = x => console.log(x)
 
-function fact(n, k0) {
+function fact(n, k1) {
     let ret = 1.0
-    let k3 = _ => {
-        k0(ret)
+    let k4 = _ => {
+        k1(ret)
     }
-    let k2 = _ => {
-        let u4 = n > 1.0
-        if (u4) {
-            let k10 = x5 => {
+    let k3 = _ => {
+        let u5 = n > 1.0
+        if (u5) {
+            let k11 = x6 => {
                 n = n - 1.0
-                let k12 = x11 => {
+                let k13 = x12 => {
                     ret = ret * n
-                    k0(ret)
+                    k3(ret)
                 }
-                let u13 = n % 2.0
-                let u14 = u13 == 0.0
-                if (u14) {
-                    k2(null)
+                let u14 = n % 2.0
+                let u15 = u14 == 0.0
+                if (u15) {
+                    k3(null)
                 } else {
-                    k12(null)
+                    k13(null)
                 }
             }
-            let u15 = ret > 1000.0
-            if (u15) {
-                k3(null)
+            let u16 = ret > 1000.0
+            if (u16) {
+                k4(null)
             } else {
-                k10(null)
+                k11(null)
             }
         } else {
-            k0(ret)
+            k1(ret)
         }
     }
-    k2(null)
+    k3(null)
 }
 
-let k18 = x16 => {
-    let x = x16
+let k19 = x17 => {
+    let x = x17
     fact(x, halt)
 }
-fact(3.0, k18)
+fact(3.0, k19)
 ```
