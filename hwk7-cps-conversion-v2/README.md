@@ -61,7 +61,7 @@ fact(3.0, k11)
 - [x] `fact2.js`
 Matches expected result but variable names are off by 1
 
-Before:
+Before
 
 ```javascript
 function fact(n) {
@@ -78,7 +78,7 @@ var x = fact(3);
 fact(x)
 ```
 
-After:
+After
 
 ```javascript
 let halt = x => console.log(x)
@@ -107,10 +107,11 @@ let k8 = x6 => {
 }
 fact(3.0, k8)
 ```
+
 - [x] `fact3.js`
 Matches expected result but variable names are off by 1
 
-Before:
+Before
 ```javascript
 function fact(n) {
     var ret = 1;
@@ -127,7 +128,7 @@ var x = fact(3);
 fact(x)
 ```
 
-After:
+After
 ```javascript
 let halt = x => console.log(x)
 
