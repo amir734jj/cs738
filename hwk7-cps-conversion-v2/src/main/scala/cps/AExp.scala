@@ -140,17 +140,18 @@ object CPS {
         check_tail(k, h)
       }
       case WhileStmt(cond, body) => {
-        val h = (c: KVar) => {
-          val break = KVar(gensym("break"))
-
-          val m = kmap ++ Map("break" -> break, "continue" -> c)
+        val h = (continuationLabel: KVar) => {
+          val done = k(Void)
+          val loopLabel = KVar(gensym("k"))
+          val breakLabel = KVar(gensym("k"))
+          val breakLambda = KLam(UVar("_"), done)
+          val loopLambda = KLam(UVar("_"), t_k(cond, b => If(b, t_c(body, kmap ++ Map("break" -> breakLabel, "continue" -> loopLabel), continuationLabel), done)))
+          val loopInvocation = KApp(loopLabel, Void)
 
           KLet(
-            break,
-              KLam(UVar("_"), KApp(c, UVar("ret"))),
-                KLet(c,
-                  KLam(UVar("_"), t_k(cond, b => If(b, t_c(body, m, c), t_c(EmptyStmt(), m, c)))),
-                    KApp(c, Void)))
+            breakLabel,
+            breakLambda,
+            KLet(loopLabel, loopLambda, loopInvocation))
         }
         check_tail(k, h)
       }
