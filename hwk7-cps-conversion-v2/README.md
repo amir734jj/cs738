@@ -1,5 +1,5 @@
 # cs738 HW#7
-Interprocedural Finite Distributive Subset (IFDS) analysis to detect possibly uninitialized variables
+CPS conversion of JavaScript while-loop
 
 ## Requirements
 
