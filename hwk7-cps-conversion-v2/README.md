@@ -67,19 +67,27 @@ let halt = x => console.log(x)
 
 function fact(n, k1) {
     let ret = 1.0
-    let u4 = n > 1.0
-    while (u4) {
-        ret = ret * n
-        n = n - 1.0
-        k1(n)
+    let k4 = _ => {
+        k1(ret)
     }
+    let k3 = _ => {
+        let u5 = n > 1.0
+        if (u5) {
+            ret = ret * n
+            n = n - 1.0
+            k1(n)
+        } else {
+            k1(ret)
+        }
+    }
+    k3(null)
 }
 
-let k7 = x5 => {
-    let x = x5
+let k8 = x6 => {
+    let x = x6
     fact(x, halt)
 }
-fact(3.0, k7)
+fact(3.0, k8)
 ```
 ## `fact3.js`
 
@@ -106,27 +114,35 @@ let halt = x => console.log(x)
 
 function fact(n, k1) {
     let ret = 1.0
-    let u4 = n > 1.0
-    while (u4) {
-        let k6 = x5 => {
-            ret = ret * n
-            n = n - 1.0
-            k1(n)
-        }
-        let u7 = ret > 1000.0
-        if (u7) {
-            k1(null)
+    let k4 = _ => {
+        k1(ret)
+    }
+    let k3 = _ => {
+        let u5 = n > 1.0
+        if (u5) {
+            let k7 = x6 => {
+                ret = ret * n
+                n = n - 1.0
+                k1(n)
+            }
+            let u8 = ret > 1000.0
+            if (u8) {
+                k4(null)
+            } else {
+                k7(null)
+            }
         } else {
-            k6(null)
+            k1(ret)
         }
     }
+    k3(null)
 }
 
-let k10 = x8 => {
-    let x = x8
+let k11 = x9 => {
+    let x = x9
     fact(x, halt)
 }
-fact(3.0, k10)
+fact(3.0, k11)
 ```
 
 ## `fact4.js`
@@ -154,31 +170,39 @@ After:
 ```javascript
 let halt = x => console.log(x)
 
-function fact(n, k1) {
+function fact(n, k0) {
     let ret = 1.0
-    let u4 = n > 1.0
-    while (u4) {
-        let k10 = x5 => {
-            n = n - 1.0
-            let k12 = x11 => {
-                ret = ret * n
-                k1(ret)
+    let k3 = _ => {
+        k0(ret)
+    }
+    let k2 = _ => {
+        let u4 = n > 1.0
+        if (u4) {
+            let k10 = x5 => {
+                n = n - 1.0
+                let k12 = x11 => {
+                    ret = ret * n
+                    k0(ret)
+                }
+                let u13 = n % 2.0
+                let u14 = u13 == 0.0
+                if (u14) {
+                    k2(null)
+                } else {
+                    k12(null)
+                }
             }
-            let u13 = n % 2.0
-            let u14 = u13 == 0.0
-            if (u14) {
-                k1(null)
+            let u15 = ret > 1000.0
+            if (u15) {
+                k3(null)
             } else {
-                k12(null)
+                k10(null)
             }
-        }
-        let u15 = ret > 1000.0
-        if (u15) {
-            k1(null)
         } else {
-            k10(null)
+            k0(ret)
         }
     }
+    k2(null)
 }
 
 let k18 = x16 => {
