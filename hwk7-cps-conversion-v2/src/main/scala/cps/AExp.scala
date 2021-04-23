@@ -141,7 +141,7 @@ object CPS {
       }
       case WhileStmt(cond, body) => {
         val h = (continuationLabel: KVar) => {
-          val done = k(Void)
+          val done = k(UVar(continuationLabel.x))
           val loopLabel = KVar(gensym("k"))
           val breakLabel = KVar(gensym("k"))
           val breakLambda = KLam(UVar("_"), done)
