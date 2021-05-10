@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="769e3efe-b0a7-4544-bbff-33b9a155db64" name="Default Changelist" comment="" />
+    <list default="true" id="769e3efe-b0a7-4544-bbff-33b9a155db64" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/build.sbt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/libs/rhino-1.7.13.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/project/build.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/cfa/CFA.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/cfa/CPS.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/common/AbstractSyntaxTree.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/common/Expression.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/common/GenerateAST.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/common/Statement.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/src/main/scala/common/Util.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact1-cps.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact1.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact2.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact3.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/fact4.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/twice-cps.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hwk8-cfa2/test/twice.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -24,6 +45,31 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/hwk8-cfa2/src/main/scala" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/hwk8-cfa2/src/main/scala" />
+      <recent name="$PROJECT_DIR$/hwk8-cfa2/test" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -33,7 +79,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1613537717379</updated>
+      <workItem from="1620666521302" duration="115000" />
+      <workItem from="1620666650064" duration="205000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
