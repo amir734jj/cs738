@@ -36,7 +36,7 @@ trait Exp {
     case Bool(x) => ""+x
     case Void => "null"
     case KLam(x, e) => s"$x => {\n$e\n$space}"
-    case ULam(xs, k, e) => s"(${(xs++List(k)).mkString(", ")}) => {\n$e\n$space\}" 
+    case ULam(xs, k, e) => "(" + (xs ++ List(k)).mkString(", ") + ") => {\n" + e + "\n" + space + "}"
     case Prim(op, e1, e2) => s"$e1 $op $e2"
     case KLet(x, e1, e) => s"${space}let $x = $e1\n$e"
     case ULet(x, e1, e) => s"${space}let $x = $e1\n$e"
@@ -82,7 +82,7 @@ case class Update (x: UVar, e1: BExp, e: CExp) extends CExp // assignment
 case class If(b: AExp, then: CExp, els: CExp) extends CExp // branch 
 
 case class KApp (k: KVar, arg: BExp, label: Int) extends CExp // continuation call 
-case class UApp (f: AExp, args: List[AExp], k: KVar, label: Int) extends CExp // user call 
+case class UApp (f: AExp, args: List[AExp], k: KVar, label: Int) extends CExp // user call
 
 case class Begin(fs: List[Fun], e: CExp) extends CExp // block with recursive definitions 
 

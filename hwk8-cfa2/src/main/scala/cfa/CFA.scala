@@ -190,7 +190,7 @@ object CFA {
     }
     (seen, edges)
   }
-  
+
   def addStatePair(map: MMap[ST, MSet[ST]], s1: ST, s2: List[ST]) {
     if (! map.contains(s1)) map.put(s1, MSet[ST]())   
     val set = map(s1)
@@ -208,7 +208,7 @@ object CFA {
     println(seen.head.kstore)
     
     val lst = edges.keys.toList    
-    val map = (lst zipWithIndex) toMap
+    val map = (lst.zipWithIndex).toMap
 
     println("\ndigraph g {\nnode [shape = record,height=.1];")
     val nodes = (lst map (n => s"${map(n)}[label = ${'"'}$n${'"'}]")).mkString(";\n")   
