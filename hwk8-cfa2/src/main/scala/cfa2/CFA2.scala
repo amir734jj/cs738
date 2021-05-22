@@ -39,7 +39,10 @@ case class ULam (xs: List[UVar], k: KVar, e: CExp) extends AExp // user lambda
 
 import Common._
 
-trait State
+trait State {
+  def apply(c: CExp): State = _
+}
+
 case class CEval(a: Call, b: Stack, c: Heap) extends State // Exit node
 case class UApply(a: ULam, b: UClos, c: Heap) extends State // Entry node
 
@@ -63,10 +66,10 @@ object Transitions {
 
   def worklist() = {
 
-    def A(a: State, b: State, c: State, d: State) = {
+    def A(e: State, psi: State, tf: State, h: State) = {
       a match {
         case CLam(_, e) => Set(e)
-        case _ =>
+        case _ => if (isStackVariable(e)) tf(e) else h(e)
       }
     }
 
